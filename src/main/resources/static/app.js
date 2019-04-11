@@ -17,6 +17,21 @@ var app = (function () {
         ctx.stroke();
     };
     
+     var addPolygonToCanvas= function(polygono) {
+        console.log("adicionando polygono a canvas")
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = '#f00';
+        ctx.beginPath();
+        ctx.moveTo(polygono[0].x,polygono[0].y);
+        for(var i = 1; i < polygono.length;i++) {
+            ctx.lineTo(polygono[i].x, polygono[i].y);
+        }
+//        ctx.lineTo(polygon[3].x,polygon[3].y);
+        ctx.closePath();
+        ctx.fill();
+    };
+    
     
     var getMousePosition = function (evt) {
         canvas = document.getElementById("canvas");
@@ -39,8 +54,12 @@ var app = (function () {
             stompClient.subscribe('/topic/newpoint.'+id, function (eventbody) {
             	var p=JSON.parse(eventbody.body);
                 addPointToCanvas(p);
-                alert(p.x +" "+p.y); 
+                //alert(p.x +" "+p.y);desactivar alert 
                 
+            });
+             stompClient.subscribe('/topic/newpolygon.'+id, function (eventbody){
+                var polygono = JSON.parse(eventbody.body);
+                addPolygonToCanvas(polygono);
             });
         });
 
@@ -74,7 +93,8 @@ var app = (function () {
             $(can).click(function (e){
                 var pt = new Point(getMousePosition(e).x,getMousePosition(e).y);
                 addPointToCanvas(pt);
-                stompClient.send("/topic/newpoint."+id, {}, JSON.stringify(pt)); 
+                stompClient.send("/topic/newpoint."+id, {}, JSON.stringify(pt));//comentar
+                stompClient.send("/app/newpoint."+id, {}, JSON.stringify(pt)); 
             });
         },
 
@@ -83,7 +103,7 @@ var app = (function () {
             console.info("publishing point at "+pt);
             var punto = JSON.stringify(pt);
             console.log(punto);
-            stompClient.send("/topic/newpoint", {}, punto);
+            stompClient.send("/app/newpoint", {}, punto);
             addPointToCanvas(pt);
             
         },
